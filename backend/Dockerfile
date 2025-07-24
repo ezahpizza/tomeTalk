@@ -2,10 +2,13 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Copy package files
 COPY package*.json ./
 
-RUN npm ci --only=production && npm cache clean --force
+# Install dependencies
+RUN npm ci --omit=dev && npm cache clean --force
 
+# Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
