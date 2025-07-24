@@ -1,6 +1,5 @@
 export interface Book {
   _id: string;
-  id?: string; // Keep for backward compatibility
   title: string;
   author: string;
   genre: string;
@@ -19,24 +18,20 @@ export interface Book {
 
 export interface Review {
   _id: string;
-  id?: string; // Keep for backward compatibility
   reviewText: string;
   rating: number;
-  book: string;
-  bookId?: string; // Keep for backward compatibility
+  book: Book | string | null;
   reviewer: {
     _id: string;
     name: string;
   } | string;
-  reviewerName?: string; // Keep for backward compatibility
-  reviewerId?: string; // Keep for backward compatibility
+
   createdAt: string;
   updatedAt?: string;
 }
 
 export interface User {
   _id: string;
-  id?: string; // Keep for backward compatibility
   name: string;
   email: string;
   createdAt?: string;

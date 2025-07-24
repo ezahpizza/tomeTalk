@@ -97,7 +97,7 @@ const getBook = async (req, res) => {
 
 const createBook = async (req, res) => {
   try {
-    // Check for validation errors
+    // validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -192,7 +192,7 @@ const deleteBook = async (req, res) => {
       });
     }
 
-    // Check if user is the book creator
+    // if user is book creator
     if (book.createdBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
@@ -254,11 +254,48 @@ const getGenres = async (req, res) => {
   }
 };
 
+// get user books
+const getUserBooks = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const books = await Book.find({ createdBy: req.user._id })
+      .populate('createdBy', 'name')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(skip);
+
+    const total = await Book.countDocuments({ createdBy: req.user._id });
+
+    res.json({
+      success: true,
+      data: {
+        books,
+        pagination: {
+          current: page,
+          pages: Math.ceil(total / limit),
+          total,
+          limit
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch user books',
+      errors: [error.message]
+    });
+  }
+};
+
 export {
   getBooks,
   getBook,
   createBook,
   updateBook,
   deleteBook,
-  getGenres
+  getGenres,
+  getUserBooks
 };

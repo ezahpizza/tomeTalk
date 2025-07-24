@@ -68,7 +68,7 @@ export default {
 				vioBlue: '#6f67cb',
 				slateBlue: '#424691',
 				cobalt: '#97a5ed',
-				charmPink: '#e398ae',
+				charmPink: '#FF5582',
 			},
 			fontFamily: {
 				'heading': ['Kode Mono', 'monospace'],

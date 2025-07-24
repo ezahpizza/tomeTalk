@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -14,7 +14,6 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,31 +22,20 @@ const LoginPage = () => {
     try {
       const success = await login(email, password);
       if (success) {
-        toast({
-          title: "Welcome back!",
-          description: "You have been successfully logged in.",
-        });
+        toast.success("Welcome back! You have been successfully logged in.");
         navigate('/');
       } else {
-        toast({
-          title: "Login failed",
-          description: "Please check your credentials and try again.",
-          variant: "destructive",
-        });
+        toast.error("Please check your credentials and try again.");
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-charcoal flex items-center justify-center p-4">
+    <div className="select-none min-h-screen bg-charcoal flex items-center justify-center p-4">
       <Card className="w-full max-w-md animate-scale-in bg-cobalt">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">

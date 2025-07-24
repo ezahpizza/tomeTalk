@@ -9,7 +9,7 @@ interface BookCardProps {
 }
 
 export const BookCard = ({ book }:BookCardProps) => {
-  const bookId = book._id || book.id;
+  const bookId = book._id;
   const createdByName = typeof book.createdBy === 'string' ? book.createdBy : book.createdBy?.name;
   
   return (

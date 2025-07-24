@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { User, AuthState } from '@/types';
+import { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { AuthState } from '@/types';
 import { authAPI } from '@/services/api';
+import { authStorage, extractErrorMessage } from '@/utils';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<boolean>;
@@ -8,6 +10,7 @@ interface AuthContextType extends AuthState {
   logout: () => void;
   loading: boolean;
   error: string | null;
+  refreshAuth: () => Promise<boolean>; 
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,48 +22,107 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const queryClient = useQueryClient();
   const [authState, setAuthState] = useState<AuthState>({
     isAuthenticated: false,
     user: null,
     token: null,
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [initialized, setInitialized] = useState(false); 
 
-  const verifyToken = useCallback(async () => {
+  const verifyToken = useCallback(async (token: string) => {
     try {
       const response = await authAPI.getMe();
       if (response.success) {
         setAuthState(prev => ({
           ...prev,
           user: response.data,
+          isAuthenticated: true,
+          token: token,
         }));
+        authStorage.store(token, response.data);
+        return true;
       }
+      return false;
     } catch (error) {
-      logout();
+
+      authStorage.clear();
+      setAuthState({
+        isAuthenticated: false,
+        user: null,
+        token: null,
+      });
+      return false;
     }
   }, []);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
-    
-    if (token && userStr) {
-      try {
-        const user = JSON.parse(userStr);
+  const refreshAuth = useCallback(async (): Promise<boolean> => {
+    setLoading(true);
+    try {
+      const authData = authStorage.retrieve();
+      if (authData) {
+        const isValid = await verifyToken(authData.token);
+        setLoading(false);
+        return isValid;
+      } else {
         setAuthState({
-          isAuthenticated: true,
-          user,
-          token,
+          isAuthenticated: false,
+          user: null,
+          token: null,
         });
-        // Verify token is still valid
-        verifyToken();
-      } catch (error) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        setLoading(false);
+        return false;
       }
+    } catch (error) {
+      console.error('Auth refresh error:', error);
+      authStorage.clear();
+      setAuthState({
+        isAuthenticated: false,
+        user: null,
+        token: null,
+      });
+      setLoading(false);
+      return false;
     }
   }, [verifyToken]);
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const authData = authStorage.retrieve();
+        
+        if (authData) {
+
+          setAuthState({
+            isAuthenticated: true,
+            user: authData.user,
+            token: authData.token,
+          });
+        } else {
+          setAuthState({
+            isAuthenticated: false,
+            user: null,
+            token: null,
+          });
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        authStorage.clear();
+        setAuthState({
+          isAuthenticated: false,
+          user: null,
+          token: null,
+        });
+      } finally {
+        setLoading(false);
+        setInitialized(true);
+      }
+    };
+
+    initializeAuth();
+  }, []); 
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setLoading(true);
@@ -72,8 +134,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (response.success) {
         const { token, ...user } = response.data;
         
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
+        authStorage.store(token, user);
         
         setAuthState({
           isAuthenticated: true,
@@ -88,11 +149,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setLoading(false);
         return false;
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error && 'response' in error 
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Login failed'
-        : 'Login failed';
-      setError(errorMessage);
+    } catch (error) {
+      setError(extractErrorMessage(error, 'Login failed'));
       setLoading(false);
       return false;
     }
@@ -108,8 +166,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (response.success) {
         const { token, ...user } = response.data;
         
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
+        authStorage.store(token, user);
         
         setAuthState({
           isAuthenticated: true,
@@ -124,25 +181,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setLoading(false);
         return false;
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error && 'response' in error 
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Signup failed'
-        : 'Signup failed';
-      setError(errorMessage);
+    } catch (error) {
+      setError(extractErrorMessage(error, 'Signup failed'));
       setLoading(false);
       return false;
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    authStorage.clear();
     setAuthState({
       isAuthenticated: false,
       user: null,
       token: null,
     });
     setError(null);
+    
+    queryClient.clear();
   };
 
   const value: AuthContextType = {
@@ -150,7 +205,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     login,
     signup,
     logout,
-    loading,
+    refreshAuth,
+    loading: loading || !initialized, 
     error,
   };
 

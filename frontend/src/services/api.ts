@@ -30,7 +30,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear token and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -122,6 +121,11 @@ export const booksAPI = {
     const response: AxiosResponse<ApiResponse<string[]>> = await api.get('/books/genres');
     return response.data;
   },
+
+  getUserBooks: async (params?: { page?: number; limit?: number }) => {
+    const response: AxiosResponse<PaginatedResponse<Book>> = await api.get('/books/my-books', { params });
+    return response.data;
+  },
 };
 
 // Reviews 
@@ -148,6 +152,11 @@ export const reviewsAPI = {
 
   getReview: async (reviewId: string) => {
     const response: AxiosResponse<ApiResponse<Review>> = await api.get(`/reviews/single/${reviewId}`);
+    return response.data;
+  },
+
+  getUserReviews: async (params?: { page?: number; limit?: number }) => {
+    const response: AxiosResponse<PaginatedResponse<Review>> = await api.get('/reviews/my-reviews', { params });
     return response.data;
   },
 };

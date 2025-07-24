@@ -15,6 +15,7 @@ const DockNav = () => {
   const goLogin = useCallback(() => navigate('/login'), [navigate]);
   const goSignup = useCallback(() => navigate('/signup'), [navigate]);
   const goAddBook = useCallback(() => navigate('/add-book'), [navigate]);
+  const goProfile = useCallback(() => navigate('/profile'), [navigate]);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -40,6 +41,7 @@ const DockNav = () => {
       return [
         ...baseItems,
         { icon: icons.addBook, label: 'Add Book', onClick: goAddBook },
+        { icon: icons.profile, label: 'Profile', onClick: goProfile },
         { icon: icons.signOut, label: 'Sign Out', onClick: handleLogout },
       ];
     } else {
@@ -49,11 +51,11 @@ const DockNav = () => {
         { icon: icons.profile, label: 'Sign Up', onClick: goSignup },
       ];
     }
-  }, [icons, isAuthenticated, goHome, goBrowseBooks, goAddBook, handleLogout, goLogin, goSignup]);
+  }, [icons, isAuthenticated, goHome, goBrowseBooks, goAddBook, goProfile, handleLogout, goLogin, goSignup]);
 
   return (
     <motion.div
-      className="fixed bottom-2 left-1/2 transform -translate-x-1/2 z-[9999] pointer-events-none w-fit"
+      className="fixed bottom-2 left-1/2 transform -translate-x-1/2 pointer-events-none w-fit"
       style={{ isolation: 'isolate' }}
       initial={{ y: 200, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
@@ -61,7 +63,7 @@ const DockNav = () => {
     >
       <div style={{ pointerEvents: 'auto' }}>
         <Dock 
-          className="bg-slateBlue"
+          className="bg-cobalt"
           items={getNavigationItems}
           panelHeight={90}
           baseItemSize={60}

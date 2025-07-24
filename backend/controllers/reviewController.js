@@ -212,10 +212,48 @@ const getReview = async (req, res) => {
   }
 };
 
+// get user reviews
+const getUserReviews = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const reviews = await Review.find({ reviewer: req.user._id })
+      .populate('reviewer', 'name')
+      .populate('book', 'title author')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(skip);
+
+    const total = await Review.countDocuments({ reviewer: req.user._id });
+
+    res.json({
+      success: true,
+      data: {
+        reviews,
+        pagination: {
+          current: page,
+          pages: Math.ceil(total / limit),
+          total,
+          limit
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch user reviews',
+      errors: [error.message]
+    });
+  }
+};
+
 export {
   getReviews,
   createReview,
   updateReview,
   deleteReview,
-  getReview
+  getReview,
+  getUserReviews
 };

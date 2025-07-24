@@ -27,7 +27,7 @@ export const SkeletonFour = () => {
       initial="initial"
       animate="animate"
       whileHover="hover"
-      className="flex flex-1 w-full h-full min-h-[6rem] bg-charcoal/5 flex-row space-x-2"
+      className="flex flex-1 w-full h-full min-h-[6rem] bg-charcoal/5 flex-row space-x-2 z-0"
     >
       <motion.div
         variants={first}

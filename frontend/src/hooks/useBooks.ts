@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from './useAuth';
 import { booksAPI } from '@/services/api';
 import { Book } from '@/types';
 
@@ -71,5 +72,17 @@ export const useDeleteBook = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BOOKS_QUERY_KEYS.all });
     },
+  });
+};
+
+export const useUserBooks = (params?: { page?: number; limit?: number }) => {
+  const { isAuthenticated, user } = useAuth();
+  
+  return useQuery({
+    queryKey: [...BOOKS_QUERY_KEYS.all, 'user-books', user?._id, { params }],
+    queryFn: () => booksAPI.getUserBooks(params),
+    enabled: isAuthenticated && !!user?._id, // Only run when authenticated and user is loaded
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    retry: 1, // Only retry once on failure
   });
 };
