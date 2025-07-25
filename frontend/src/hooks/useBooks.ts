@@ -81,8 +81,8 @@ export const useUserBooks = (params?: { page?: number; limit?: number }) => {
   return useQuery({
     queryKey: [...BOOKS_QUERY_KEYS.all, 'user-books', user?._id, { params }],
     queryFn: () => booksAPI.getUserBooks(params),
-    enabled: isAuthenticated && !!user?._id, // Only run when authenticated and user is loaded
-    staleTime: 30000, // Consider data fresh for 30 seconds
-    retry: 1, // Only retry once on failure
+    enabled: isAuthenticated && !!user?._id, 
+    staleTime: 30000, 
+    retry: 1, 
   });
 };

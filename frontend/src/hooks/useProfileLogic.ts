@@ -86,7 +86,6 @@ export const useProfileLogic = () => {
   };
 
   const handleDeleteBook = async (bookId: string, title: string) => {
-    // Additional validation could be added here if needed
     setDeletingBook({ id: bookId, title });
   };
 
@@ -104,7 +103,6 @@ export const useProfileLogic = () => {
 
   // Review handlers
   const handleEditReview = (review: Review) => {
-    // Ensure user can only edit their own reviews
     if (!isReviewOwner(review, user)) {
       toast.error('You can only edit reviews you wrote');
       return;
