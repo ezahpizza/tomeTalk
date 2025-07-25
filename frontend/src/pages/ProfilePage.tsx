@@ -3,13 +3,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserBooks } from '@/hooks/useBooks';
 import { useUserReviews } from '@/hooks/useReviews';
 import { useGenres } from '@/hooks/useBooks';
+import {useProfileLogic} from '@/hooks/useProfileLogic';
 import { BentoGrid, BentoGridItem } from '@/components/ui/bento-grid';
 import { 
   EditBookDialog,
   EditReviewDialog,
   DeleteBookDialog,
   DeleteReviewDialog,
-  useProfileLogic,
   Rotatingtext,
   getProfileItems
 } from '@/components/profile';
